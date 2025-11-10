@@ -6,7 +6,9 @@ $mol_form $mol_list
 		keydown?event <=> keydown?event null
 	save?event null
 	message_done @ \Saved
-	message_invalid @ \Form is not valid
+	errors *string
+		\Form invalid
+			<= form_invalid @ \Form is not valid
 	rows /
 		<= Body $mol_list
 			sub <= body <= form_fields /$mol_form_field
@@ -15,6 +17,7 @@ $mol_form $mol_list
 				<= Submit $mol_button_major
 					title <= submit_title @ \Save
 					hint <= submit_hint \
+					activate? => submit_activate?
 					click? <=> submit? null
 				<= Result $mol_status
 					message <= result? null

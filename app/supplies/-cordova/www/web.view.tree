@@ -66,13 +66,14 @@ $mol_string $mol_view
 
 $mol_list $mol_view
 	render_visible_only true
-	render_over 0
+	render_over 0.1
 	sub <= rows /$mol_view
-	Empty $mol_view
-	Gap_before $mol_view style * paddingTop <= gap_before 0
-	Gap_after $mol_view style * paddingTop <= gap_after 0
+		<= Gap_before $mol_view style * paddingTop <= gap_before 0
+		<= Empty $mol_view
+		<= Gap_after $mol_view style * paddingTop <= gap_after 0
 	item_height_min* 1
 	item_width_min* 1
+	view_window_shift? 0
 	view_window /
 		0
 		0
@@ -96,13 +97,7 @@ $mol_form_field $mol_labeler
 	content / <= control null
 
 $mol_speck $mol_view
-	minimal_width 12
-	attr *
-		^
-		mol_theme <= theme \$mol_theme_accent
-	style *
-		^
-		minHeight \1em
+	theme \$mol_theme_accent
 	sub /
 		<= value null
 
@@ -112,9 +107,9 @@ $mol_button $mol_view
 	event_click?event null
 	event *
 		^
-		click?event <=> event_activate?event null
+		click?event <=> activate?event <=> event_activate?event null
 		dblclick?event <=> clicks?event null
-		keydown?event <=> event_key_press?event null 
+		keydown?event <=> key_press?event <=> event_key_press?event null
 	attr *
 		^
 		disabled <= disabled false
@@ -152,7 +147,9 @@ $mol_form $mol_list
 		keydown?event <=> keydown?event null
 	save?event null
 	message_done @ \Saved
-	message_invalid @ \Form is not valid
+	errors *string
+		\Form invalid
+			<= form_invalid @ \Form is not valid
 	rows /
 		<= Body $mol_list
 			sub <= body <= form_fields /$mol_form_field
@@ -161,6 +158,7 @@ $mol_form $mol_list
 				<= Submit $mol_button_major
 					title <= submit_title @ \Save
 					hint <= submit_hint \
+					activate? => submit_activate?
 					click? <=> submit? null
 				<= Result $mol_status
 					message <= result? null
@@ -479,7 +477,7 @@ $mol_image $mol_view
 		^
 		src <= uri \
 		title <= hint
-		alt <= title
+		alt <= title \
 		loading <= loading \lazy
 		decoding <= decoding \async
 		crossOrigin <= cors null

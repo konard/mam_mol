@@ -285,8 +285,6 @@ namespace $ {
 		dom_node_actual() {
 			const node = this.dom_node()
 
-			$mol_dom_render_styles( node, this.style_size() )
-
 			const attr = this.attr()
 			const style = this.style()
 
@@ -397,8 +395,7 @@ namespace $ {
 			return names
 		}
 		
-		@ $mol_mem
-		theme( next = null as null | string ) {
+		theme( next?: string | null ) {
 			return next
 		}
 		
@@ -412,17 +409,8 @@ namespace $ {
 		
 		attr() {
 			return {
-				mol_theme: this.theme() ?? undefined,
+				mol_theme: this.theme(),
 			} as {}
-		}
-		
-		style_size() {
-			return {
-				minHeight: this.minimal_height(),
-				minWidth: this.minimal_width(),
-			} as {
-				[key: string]: string | number;
-			}
 		}
 		
 		style() : { [ key : string ] : string|number } {
