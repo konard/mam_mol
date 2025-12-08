@@ -2,8 +2,9 @@ namespace $ {
 	
 	setTimeout( ()=> $mol_wire_async( $mol_build ).start( process.argv.slice( 2 ) ) )
 
+	
+
 	export class $mol_build extends $mol_object {
-		
 		@ $mol_mem_key
 		static root( [ root, paths ] : [root: string, paths: readonly string[] ] ) {
 			this.$.$mol_file.base = root
@@ -44,15 +45,13 @@ namespace $ {
 					}
 					process.exit(0)
 				} catch( error: any ) {
-					if( $mol_fail_catch( error ) ) {
-						this.$.$mol_log3_fail({
-							place: '$mol_build_start' , 
-							message: error.message,
-							trace: error.stack,
-						})
-					}
-
-					process.exit(1)
+					if( $mol_promise_like( error ) ) $mol_fail_hidden( error )
+					this.$.$mol_log3_fail({
+						place: '$mol_build_start' , 
+						message: error.message,
+						trace: error.stack,
+					})
+					process.exit(135)
 				}
 			} else {
 				Promise.resolve().then( ()=> {
@@ -79,7 +78,7 @@ namespace $ {
 
 				const res = this.$.$mol_file.unwatched(() => this.$.$mol_run.spawn( { command: step.text(), dir } ), dir )
 					.stdout.toString().trim()
-				if( step.type ) content += `let ${ step.type } = ${ JSON.stringify( res ) }`
+				if( step.type ) content += `namespace $ { export let ${ step.type } = ${ JSON.stringify( res ) } }`
 
 			}
 
@@ -334,7 +333,7 @@ namespace $ {
 				}
 				
 				const node_types = $mol_file.absolute( path ).resolve( `-node/deps.d.ts` )
-				node_types.text( 'interface $node {\n ' + types.join( '\n' ) + '\n}' )
+				node_types.text( '// @ts-nocheck\ninterface $node {\n ' + types.join( '\n' ) + '\n}' )
 				sources.push( node_types )
 			}
 
@@ -1242,7 +1241,9 @@ namespace $ {
 			json.version = version.join( '.' )
 
 			for( let dep of this.nodeDeps([ path , exclude ]).keys() ) {
-				if( require('module').builtinModules.includes(dep) || dep.startsWith('node:')) continue
+
+				if( $node_internal_check(dep) ) continue
+				if( dep === 'internal' ) continue // @TODO: Prevent `internal` deps from `node:internal`.
 				json.dependencies[ dep ] ??= `*`
 			}
 			
@@ -1552,6 +1553,7 @@ namespace $ {
 				
 				line.replace(
 					/\b(?:require|import)\(\s*['"]([^"'()]*?)['"]\s*\)/ig , ( str , path )=> {
+						if ($node_internal_check(path)) return str
 						path = path.replace( /(\/[^\/.]+)$/ , '$1.js' ).replace( /\/$/, '/index.js' )
 						if( path[0] === '.' ) path = '../' + path
 						$mol_build_depsMerge( depends , { [ path ] : priority } )
@@ -1590,6 +1592,7 @@ namespace $ {
 				
 				line.replace(
 					/\b(?:require|import)\(\s*['"]([^"'()]*?)['"]\s*\)/ig , ( str , path )=> {
+						if ($node_internal_check(path)) return str
 						$mol_build_depsMerge( depends , { [ path ] : priority } )
 						return str
 					}
